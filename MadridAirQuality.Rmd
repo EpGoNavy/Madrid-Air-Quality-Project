@@ -1,0 +1,383 @@
+---
+Author: "Ed Powell"
+title: "Madrid Air Quality Final Version"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
+Since I am not a meterologist, I had to read about the different pollutants in the Madrid Air Quality file.  
+
+The four I looked at are:
+
+1. O_3 -  Is the Ozone that protects us from the sun
+2. PM10 - Particle Pollution - PM10 is course an example - an example of dust being disturbed by cars driving down the road
+3. NO_2 - Nitrogen dioxide - This forms the brown cloud in large cites.  *****This will be the value used in forecasting*****
+4. SO_2 - Sulfur dioxide - We know this because of the oder 
+
+
+References links
+Boxplot https://www.rdocumentation.org/packages/reshape2/versions/1.4.3/topics/melt.data.frame
+pictures https://airnow.gov/index.cfm?action=pubs.aqguidepart
+EPA https://www.epa.gov/air-trends/particulate-matter-pm10-trends
+
+---
+
+```{r}
+
+```
+Some of the packages are my normal ones. However, for this project, since I will be using the ARIMA model for forecasting, I needed to add a couple of new packages:
+
+1. forecast
+2. date
+3. tseries
+4. rio
+
+```{r}
+
+install.packages("dplyr")
+install.packages("tidyverse")
+install.packages("readr")
+install.packages("plyr")
+install.packages("lubridate")
+install.packages("ggplot2")
+install.packages("reshape")
+install.packages("data.table")
+install.packages("sqldf")
+install.packages("forecast")
+install.packages("ddplry")
+install.packages("tidyr")
+install.packages("rio")
+install.packages("date")
+install.packages("tseries")
+install.packages("knitr")
+install.packages("markdown")
+install.packages("rmarkdown")
+install.packages("devtools")
+
+library(dplyr)
+library(tidyverse)
+library(readr)
+library(plyr)
+library(lubridate)
+library(ggplot2)
+library(reshape)
+library(data.table)
+library(sqldf)
+library(forecast)
+library(tidyr)
+library(rio)
+library(date)
+library(tseries)
+library(markdown)
+library(rmarkdown)
+library(knitr)
+library(devtools)
+
+getwd()
+
+
+```
+The below code is where, I'm getting all 18 individual csv files into a single file call MadridSingleFile. I can now explore from a highlevel what the str looks like and get a statistical overview by running the summay. 
+
+```{r}
+
+#This segment of code is orgainzing the file and by using view it will show us what the data looks like.
+
+filenames <- list.files(path = "./", pattern = "*.csv", full.names=TRUE)
+MadridSingleFile <- ldply(filenames, read.csv)
+
+MadridSingleFile<- data.frame(MadridSingleFile)
+view(MadridSingleFile)
+
+```
+```{r}
+MadridSingleFile$NewDate <- strptime(MadridSingleFile$date, "%m/%d/%Y %H:%S")
+MadridSingleFile$day <- day(MadridSingleFile$NewDate)
+MadridSingleFile$month <- month(MadridSingleFile$NewDate)
+MadridSingleFile$year <- year(MadridSingleFile$NewDate)
+MadridSingleFile$hour <- hour(MadridSingleFile$NewDate)
+MadridSingleFile$dates <- as.Date(MadridSingleFile$date, "%m/%d/%Y")
+MadridSingleFile$NewDate <- as.character(MadridSingleFile$NewDate,format="%m/%d/%Y")
+str(MadridSingleFile)
+view(MadridSingleFile)
+summary(MadridSingleFile)
+
+#After added the new fields the below commands remove unnecessary columns 20-26, and remove the last 24 rows, the to lines of code does that then we can #validate that by using the view command. 
+
+MadridSingleFile[20:26] <- list(NULL)
+MadridSingleFile  <- slice(MadridSingleFile, 1:(n()-24))
+view(MadridSingleFile)
+
+```
+
+*********************************************This is the start of the Exploratory Data Analysis*****************************************************
+
+
+I am pulling out the four most common pollutants that are consider by the government as the most harmful to humans.
+There are two things going on here with the code below.
+
+1. I am pulling out only the four pollutants that I want to look at 
+2. Showing how often the data is populated. NO_2 Nitrogen dioxide is the most populated.  
+
+
+```{r}
+#I am starting to look at the top four pollutants. 
+
+FinalFourPollutants <-MadridSingleFile[,c('O_3','PM10','NO_2','SO_2')]
+
+summary(FinalFourPollutants)
+
+NotNAs<-data.frame(percent=round(colSums(!is.na(FinalFourPollutants))/nrow(FinalFourPollutants)*100))
+NotNAs$poll <- rownames(NotNAs)
+NotNAs$pollutants<-factor(NotNAs$poll, as.character(NotNAs$poll))
+
+ggplot(NotNAs, aes(pollutants, percent,fill=pollutants))+
+geom_bar(stat="identity") +scale_fill_manual(values = c("red","green","brown","blue"))+
+
+geom_text(data=NotNAs, aes(label=paste0(percent,"%"),
+                               y=percent+0.9), size=4, vjust = -.4)+
+ labs(x = "Pollutants", y = "Percentage", 
+         title = "Percent of pollutants populated")
+```
+The code below are box plots taht are turned on their sides.  To make this happen, I started with this code 
+
+Pollutantnames<-c("SO_2", "NO_2", "PM10", "O_3")
+BP <- boxplot(FinalFourPollutants$O_3,FinalFourPollutants$PM10,FinalFourPollutants$NO_2,FinalFourPollutants$SO_2,horizontal=TRUE,las=1, names = Pollutantnames)
+
+Which if run will only produce a black and white plot. It took me awhile to get the items to line up.  
+```{r}
+#In order to keep the same order as in the above code I had to reverse the order of the
+#polluntants, since I was flipping the barchart. I also had to make sure the colors were
+#in the correct order too.
+
+boxplot_melt <- melt(MadridSingleFile,id.vars='station', measure.vars=c("SO_2", "NO_2", "PM10", "O_3"))
+createBoxPlot4Pollutants<-ggplot(na.omit(boxplot_melt),aes(x=variable,y=value, color=variable)) +
+      geom_boxplot()+ coord_flip()+
+      scale_colour_manual(values=c("blue","brown","green","red"))+
+      theme(legend.position="none")+
+      labs(title="Distribution Of The Four Pollutants")
+plot(createBoxPlot4Pollutants)
+```
+Below are the histograms for the four pollutants.  I used sqldf to extract the data.  Once again I used the same colors for the polluntants.  This makes it easier to track of them.  
+```{r}
+# The first thing was to extract the data using sqldf
+
+
+histO_3 <-sqldf("select O_3, count(*)
+               from MadridSingleFile 
+               where O_3 != 'NA'
+               group by O_3")
+
+histPM10 <-sqldf("select PM10, count(*)
+                from MadridSingleFile 
+                where PM10 !='NA'
+                group by PM10")
+
+histNO_2 <-sqldf("select NO_2, count(*)
+                from MadridSingleFile 
+                where NO_2 !='NA'
+                group by NO_2")
+
+histSO_2 <-sqldf("select SO_2, count(*)
+                from MadridSingleFile 
+                where SO_2 !='NA'
+                group by SO_2")
+
+#Step 2 plot the histograms.  
+
+hist(histO_3$O_3, plot=TRUE, col="red")
+hist(histPM10$PM10, plot=TRUE,col="green")
+hist(histNO_2$NO_2, plot=TRUE, col="brown")
+hist(histSO_2$SO_2, plot=TRUE,col="blue")
+
+```
+The remaining code is the time series for NO_2. So I using sqldf, I selected years greater than 2016.  So, I will be using 2017-2018 to forecast 60 days out for NO_2 (Nitrogen dioxide).  These same steps could be used for any timeseries, including the other pollutants.   
+```{r}
+# Step 1.  Need to get NO_2 into a file called group_ts.  I selected the year > 2016 and where the 
+#NO_2 value was less than 150.  I did this based ont the EDA
+
+group_ts <- sqldf("select *
+                  from MadridSingleFile
+                  where year > 2016 and (NO_2) < 150
+                  group by day, month, year")
+
+
+#Step 2.  Plot the graph by month
+
+ggplot(group_ts, aes(dates,NO_2)) + geom_line()+
+  scale_x_date('month')
+
+
+
+```
+Step 2.  I want to look at the data using the facet_wrap command by month.  This will show us if there are diffent years with data in the same month.  
+I did find this an intresting plot.  
+```{r}
+# Plotting NO_2 by month.  We can see that we have 2017 and 2018 through the first four months.  This helps to understand what is happening with
+#the data. 
+
+ggplot(group_ts, aes(dates,NO_2)) + geom_point(color = "brown") +
+  facet_wrap( ~month) + scale_x_date('month')
+
+```
+Step 3.  We need to create a times series object.  
+
+
+```{r}
+# I need to create a time series object. I will be using the group_ts create above for this.  
+
+NO_2.tsobject = ts(group_ts[, c("NO_2")])
+
+# Now I will use the tsclean command to clean up the NO_2 data.  
+group_ts$tscleaned = tsclean(NO_2.tsobject)
+
+#Plot the data.  
+ggplot() +
+  geom_line(data = group_ts, aes( x= dates, y= tscleaned))
+```
+Step 4.  Now I am going to look at the moving average for weekly and the 30.  Plot them with the count to help determine which value will be used.  It's hard to see, I know, the green (Monthly moving average) doesn't have a lot of variance. So I decided to us the weekly moving average. There is still quite a bit of variance. Depending on what you're looking at this can help decided what you want. 
+
+```{r}
+#Here is where I get the moving average for weekly and monthly for NO_2 using the ma function
+
+group_ts$NO_2.mavg7 = ma(group_ts$tscleaned,order = 7)
+group_ts$NO_2.mavg30 = ma(group_ts$tscleaned,order = 30)
+
+ggplot() +
+  geom_line(data = group_ts, aes(x = dates, y = tscleaned, colour = "Counts")) +
+  geom_line(data = group_ts, aes(x = dates, y = NO_2.mavg30, colour = "Monthly Moving Average")) +
+  geom_line(data = group_ts, aes(x = dates, y = NO_2.mavg7, colour = "weekly Moving Average"))
+
+```
+
+Step 5. Now I am going to decompose the data that will be used in the ARIMA forecasting  
+
+There is a lot going on in this next bit of code.  1) Need to remove an na's from NO_2.  2) Going to remove seasonality.  3) decompose it and then graph it.  
+```{r}
+count_ma = ts(na.omit(group_ts$NO_2.mavg7), frequency = 30)
+decomp = stl(count_ma, s.window = "periodic")
+rmvseasonal.NO_2 <- seasadj(decomp) # decomp will be use later on. 
+
+plot(decomp)
+# Notice the data is much cleaner than it was before because
+# I'm using a weekly moving average. The plot just shows what the 
+#code is doing
+######## The NO_2 data is NOT stationary.  It's going up and down
+
+#######################################
+
+#Need to run a Augmented Dickey-Fuller test using the adf function.  
+#whats key here is the lag order, which will be used later on. The
+#other important thing here is the more negative they number the 
+#more accurate the model will be.  In this case it's -4.861
+#will see if I can improve on that number.  
+
+
+adf.test(count_ma, alternative = "stationary")
+
+```
+
+
+```{r}
+# The functions below check the the correlations between 
+# the series and its lag.  
+Acf(count_ma, main= "")
+
+Pacf(count_ma, main = "")
+```
+
+
+```{r}
+#Here I'm seeing how close I can get the difference.  Depending on 
+#what you want, you can change the differences, I'v decided to use 1
+
+count_diff = diff(rmvseasonal.NO_2, differences = 1)
+plot(count_diff)
+
+adf.test(count_diff, alternative = "stationary")
+
+Acf(count_diff, main = "ACF Series")
+Pacf(count_diff, main = "PACF Series")
+
+```
+########################  FITTING THE MODEL ####################
+
+Step 1. 
+
+```{r}
+#Fitting the ARMIA model
+#Here I'm getting the p,d,q values. By using the auto.arima
+#I want to see what values it brings back for the p,d,q values. 
+
+auto.arima(rmvseasonal.NO_2, seasonal = FALSE)
+#It brings back p,d,q values of 2,0,3.  
+```
+Step 2. fitting the model to see what the default p,d,q values of (1,1,1) and will compare that with the values I chose of (1,1,7) based
+on the previous values from above.
+
+```{r}
+#default values to make see how the model looks
+#The lag.max needs to be enough to see how it looks, get enough data. 
+fit <- auto.arima(rmvseasonal.NO_2, seasonal = FALSE)
+tsdisplay(residuals(fit), lag.max = 40, main = "(1,1,1) Module Res")
+
+#values I choose or 1,1,7.  This is a non auto.arima. 
+#Even though my from the adf, it recommended a lag of 7, I chose 8
+#it was a better fit.  
+fit2 <- arima(rmvseasonal.NO_2, order = c(1,1,7))
+tsdisplay(residuals(fit2), lag.max = 15, main = "(1,1,7 Module Res")
+
+```
+################ Forecasting ##############
+
+I will be using the fit2 model from above. I decided to use the values
+for d,p, q (1,1,7) as the model showed
+
+
+```{r}
+# Here I'm usqing the fit2 model, which is a non auto.arima. 
+# becasue I ordered the d,p,q vlaues. 
+# h=30, is 30 days.  
+fcast <- forecast(fit2, h=30)
+plot(fcast)
+
+#the plot shows a straight line in the forecast area.  this will be 
+#fixed in the steps below.  
+
+```
+
+Step. 2
+I going to take a subset of the data and compare between the holdout and none hold out values. I will doing 30 days, and this will help me to understand if I need to bring back the seasonality to make the predicition more accurate allong with the forecast.  
+
+```{r}
+#since this is a subset ofd data, it will come from the rmvseasonal values
+#this will be 30 days.  from 450 to 480.  which was created earlier. 
+hold <- window(ts(rmvseasonal.NO_2), start = 450)
+fit_nohold = arima(ts(rmvseasonal.NO_2[-c(450:480)]), order=c(1,1,7))
+fcast_nohold <- forecast(fit_nohold, h = 30)
+plot(fcast_nohold, main= "")
+lines(ts(rmvseasonal.NO_2))
+
+fit_with_seasons = auto.arima(rmvseasonal.NO_2, seasonal = TRUE)
+seasons.forecast <- forecast(fit_with_seasons,h=65)
+plot(seasons.forecast)
+
+#Forecasting out 65 days shows there is a high trust in the model
+#the forecast is well with in the 95% which is the darker grey.  
+
+
+```
+
+
+
