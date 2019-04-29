@@ -23,7 +23,7 @@ MadridSingleFile<- data.frame(MadridSingleFile)
 As I stated above I used for my analysis.  Here are a view examples of the
 graphs I used.
 
-![]()
+![BarChartOfPollutants](https://github.com/EpGoNavy/Madrid-Air-Quality-Project/blob/master/graphs/BarChartPolluntants.PNG)
 
 
 
