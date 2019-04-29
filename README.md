@@ -25,6 +25,9 @@ graphs I used.
 
 ![BarChartOfPollutants](https://github.com/EpGoNavy/Madrid-Air-Quality-Project/blob/master/graphs/BarChartPolluntants.PNG)
 
+![BoxPlotOfPollutants](https://github.com/EpGoNavy/Madrid-Air-Quality-Project/blob/master/graphs/BoxPlotsPollutants.PNG)
+
+![HistogramNO_2](https://github.com/EpGoNavy/Madrid-Air-Quality-Project/blob/master/graphs/HistogramNO_2.PNG)
 
 
 # Analysis
