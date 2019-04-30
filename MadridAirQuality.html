@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+<title></title>
+
+<script type="text/javascript">
+window.onload = function() {
+  var imgs = document.getElementsByTagName('img'), i, img;
+  for (i = 0; i < imgs.length; i++) {
+    img = imgs[i];
+    // center an image if it is the only element of its parent
+    if (img.parentElement.childElementCount === 1)
+      img.parentElement.style.textAlign = 'center';
+  }
+};
+</script>
+
+
+
+
+
+<style type="text/css">
+body, td {
+   font-family: sans-serif;
+   background-color: white;
+   font-size: 13px;
+}
+
+body {
+  max-width: 800px;
+  margin: auto;
+  padding: 1em;
+  line-height: 20px;
+}
+
+tt, code, pre {
+   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
+}
+
+h1 {
+   font-size:2.2em;
+}
+
+h2 {
+   font-size:1.8em;
+}
+
+h3 {
+   font-size:1.4em;
+}
+
+h4 {
+   font-size:1.0em;
+}
+
+h5 {
+   font-size:0.9em;
+}
+
+h6 {
+   font-size:0.8em;
+}
+
+a:visited {
+   color: rgb(50%, 0%, 50%);
+}
+
+pre, img {
+  max-width: 100%;
+}
+pre {
+  overflow-x: auto;
+}
+pre code {
+   display: block; padding: 0.5em;
+}
+
+code {
+  font-size: 92%;
+  border: 1px solid #ccc;
+}
+
+code[class] {
+  background-color: #F8F8F8;
+}
+
+table, td, th {
+  border: none;
+}
+
+blockquote {
+   color:#666666;
+   margin:0;
+   padding-left: 1em;
+   border-left: 0.5em #EEE solid;
+}
+
+hr {
+   height: 0px;
+   border-bottom: none;
+   border-top-width: thin;
+   border-top-style: dotted;
+   border-top-color: #999999;
+}
+
+@media print {
+   * {
+      background: transparent !important;
+      color: black !important;
+      filter:none !important;
+      -ms-filter: none !important;
+   }
+
+   body {
+      font-size:12pt;
+      max-width:100%;
+   }
+
+   a, a:visited {
+      text-decoration: underline;
+   }
+
+   hr {
+      visibility: hidden;
+      page-break-before: always;
+   }
+
+   pre, blockquote {
+      padding-right: 1em;
+      page-break-inside: avoid;
+   }
+
+   tr, img {
+      page-break-inside: avoid;
+   }
+
+   img {
+      max-width: 100% !important;
+   }
+
+   @page :left {
+      margin: 15mm 20mm 15mm 10mm;
+   }
+
+   @page :right {
+      margin: 15mm 10mm 15mm 20mm;
+   }
+
+   p, h2, h3 {
+      orphans: 3; widows: 3;
+   }
+
+   h2, h3 {
+      page-break-after: avoid;
+   }
+}
+</style>
+
+
+
+</head>
+
+<body>
+<p>This is an <a href="http://rmarkdown.rstudio.com">R Markdown</a> Notebook. When you execute code within the notebook, the results appear beneath the code. </p>
+
+<p>Try executing this chunk by clicking the <em>Run</em> button within the chunk or by placing your cursor inside it and pressing <em>Ctrl+Shift+Enter</em>. </p>
+
+<p>Try executing this chunk by clicking the <em>Run</em> button within the chunk or by placing your cursor inside it and pressing <em>Ctrl+Shift+Enter</em>. </p>
+
+<p>Add a new chunk by clicking the <em>Insert Chunk</em> button on the toolbar or by pressing <em>Ctrl+Alt+I</em>.</p>
+
+<p>When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the <em>Preview</em> button or press <em>Ctrl+Shift+K</em> to preview the HTML file).</p>
+
+<p>The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike <em>Knit</em>, <em>Preview</em> does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.</p>
+
+<p>Since I am not a meterologist, I had to read about the different pollutants in the Madrid Air Quality file.  </p>
+
+<p>The four I looked at are:</p>
+
+<ol>
+<li>O_3 -  Is the Ozone that protects us from the sun</li>
+<li>PM10 - Particle Pollution - PM10 is course an example - an example of dust being disturbed by cars driving down the road</li>
+<li>NO_2 - Nitrogen dioxide - This forms the brown cloud in large cites.  **<strong><em>This will be the value used in forecasting</em></strong>**</li>
+<li>SO_2 - Sulfur dioxide - We know this because of the oder </li>
+</ol>
+
+<p>References links
+Boxplot <a href="https://www.rdocumentation.org/packages/reshape2/versions/1.4.3/topics/melt.data.frame">https://www.rdocumentation.org/packages/reshape2/versions/1.4.3/topics/melt.data.frame</a>
+pictures <a href="https://airnow.gov/index.cfm?action=pubs.aqguidepart">https://airnow.gov/index.cfm?action=pubs.aqguidepart</a>
+EPA <a href="https://www.epa.gov/air-trends/particulate-matter-pm10-trends">https://www.epa.gov/air-trends/particulate-matter-pm10-trends</a></p>
+
+<hr>
+
+<p>Some of the packages are my normal ones. However, for this project, since I will be using the ARIMA model for forecasting, I needed to add a couple of new packages:</p>
+
+<ol>
+<li>forecast</li>
+<li>date</li>
+<li>tseries</li>
+<li>rio</li>
+</ol>
+
+<pre><code class="r">install.packages(&quot;dplyr&quot;)
+</code></pre>
+
+<pre><code>## Error in install.packages : Updating loaded packages
+</code></pre>
+
+<pre><code class="r">install.packages(&quot;tidyverse&quot;)
+</code></pre>
+
+<pre><code>## Error in install.packages : Updating loaded packages
+</code></pre>
+
+<pre><code class="r">install.packages(&quot;readr&quot;)
+</code></pre>
+
+<pre><code>## Error in install.packages : Updating loaded packages
+</code></pre>
+
+<pre><code class="r">install.packages(&quot;plyr&quot;)
+</code></pre>
+
+<pre><code>## Error in install.packages : Updating loaded packages
+</code></pre>
+
+<pre><code class="r">install.packages(&quot;lubridate&quot;)
+</code></pre>
+
+<pre><code>## Error in install.packages : Updating loaded packages
+</code></pre>
+
+<pre><code class="r">install.packages(&quot;ggplot2&quot;)
+</code></pre>
+
+<pre><code>## Error in install.packages : Updating loaded packages
+</code></pre>
+
+<pre><code class="r">install.packages(&quot;reshape&quot;)
+</code></pre>
+
+<pre><code>## Error in install.packages : Updating loaded packages
+</code></pre>
+
+<pre><code class="r">install.packages(&quot;data.table&quot;)
+</code></pre>
+
+<pre><code>## Error in install.packages : Updating loaded packages
+</code></pre>
+
+<pre><code class="r">install.packages(&quot;sqldf&quot;)
+</code></pre>
+
+<pre><code>## Error in install.packages : Updating loaded packages
+</code></pre>
+
+<pre><code class="r">install.packages(&quot;forecast&quot;)
+</code></pre>
+
+<pre><code>## Error in install.packages : Updating loaded packages
+</code></pre>
+
+<pre><code class="r">install.packages(&quot;ddplry&quot;)
+</code></pre>
+
+<pre><code>## Installing package into &#39;C:/Users/ep927/Documents/R/win-library/3.5&#39;
+## (as &#39;lib&#39; is unspecified)
+</code></pre>
+
+<pre><code>## Warning in install.packages :
+##   package &#39;ddplry&#39; is not available (for R version 3.5.2)
+</code></pre>
+
+<pre><code class="r">install.packages(&quot;tidyr&quot;)
+</code></pre>
+
+<pre><code>## Error in install.packages : Updating loaded packages
+</code></pre>
+
+<pre><code class="r">install.packages(&quot;rio&quot;)
+</code></pre>
+
+<pre><code>## Error in install.packages : Updating loaded packages
+</code></pre>
+
+<pre><code class="r">install.packages(&quot;date&quot;)
+</code></pre>
+
+<pre><code>## Error in install.packages : Updating loaded packages
+</code></pre>
+
+<pre><code class="r">install.packages(&quot;tseries&quot;)
+</code></pre>
+
+<pre><code>## Error in install.packages : Updating loaded packages
+</code></pre>
+
+<pre><code class="r">install.packages(&quot;knitr&quot;)
+</code></pre>
+
+<pre><code>## Error in install.packages : Updating loaded packages
+</code></pre>
+
+<pre><code class="r">install.packages(&quot;markdown&quot;)
+</code></pre>
+
+<pre><code>## Error in install.packages : Updating loaded packages
+</code></pre>
+
+<pre><code class="r">install.packages(&quot;rmarkdown&quot;)
+</code></pre>
+
+<pre><code>## Error in install.packages : Updating loaded packages
+</code></pre>
+
+<pre><code class="r">install.packages(&quot;devtools&quot;)
+</code></pre>
+
+<pre><code>## Error in install.packages : Updating loaded packages
+</code></pre>
+
+<pre><code class="r">library(dplyr)
+library(tidyverse)
+library(readr)
+library(plyr)
+library(lubridate)
+library(ggplot2)
+library(reshape)
+library(data.table)
+library(sqldf)
+library(forecast)
+library(tidyr)
+library(rio)
+library(date)
+library(tseries)
+library(markdown)
+library(rmarkdown)
+library(knitr)
+library(devtools)
+
+getwd()
+</code></pre>
+
+<pre><code>## [1] &quot;C:/Users/ep927/Documents/Maydrid_Air_Quality&quot;
+</code></pre>
+
+<p>The below code is where, I&#39;m getting all 18 individual csv files into a single file call MadridSingleFile. I can now explore from a highlevel what the str looks like and get a statistical overview by running the summay. </p>
+
+<pre><code class="r">#This segment of code is orgainzing the file and by using view it will show us what the data looks like.
+
+filenames &lt;- list.files(path = &quot;./&quot;, pattern = &quot;*.csv&quot;, full.names=TRUE)
+MadridSingleFile &lt;- ldply(filenames, read.csv)
+
+MadridSingleFile&lt;- data.frame(MadridSingleFile)
+view(MadridSingleFile)
+</code></pre>
+
+<pre><code class="r">MadridSingleFile$NewDate &lt;- strptime(MadridSingleFile$date, &quot;%m/%d/%Y %H:%S&quot;)
+MadridSingleFile$day &lt;- day(MadridSingleFile$NewDate)
+MadridSingleFile$month &lt;- month(MadridSingleFile$NewDate)
+MadridSingleFile$year &lt;- year(MadridSingleFile$NewDate)
+MadridSingleFile$hour &lt;- hour(MadridSingleFile$NewDate)
+MadridSingleFile$dates &lt;- as.Date(MadridSingleFile$date, &quot;%m/%d/%Y&quot;)
+MadridSingleFile$NewDate &lt;- as.character(MadridSingleFile$NewDate,format=&quot;%m/%d/%Y&quot;)
+str(MadridSingleFile)
+</code></pre>
+
+<pre><code>## &#39;data.frame&#39;:    3808248 obs. of  31 variables:
+##  $ date     : Factor w/ 151896 levels &quot;1/1/2001 1:00&quot;,..: 7298 7298 7298 7298 7298 7298 7298 7298 7298 7298 ...
+##  $ BEN      : num  NA 1.5 NA NA NA ...
+##  $ CO       : num  0.37 0.34 0.28 0.47 0.39 ...
+##  $ EBE      : num  NA 1.49 NA NA NA ...
+##  $ MXY      : num  NA 4.1 NA NA NA ...
+##  $ NMHC     : num  NA 0.07 NA NA NA ...
+##  $ CH4      : num  NA NA NA NA NA NA NA NA NA NA ...
+##  $ NO       : int  NA NA NA NA NA NA NA NA NA NA ...
+##  $ NO_2     : num  58.4 56.2 50.7 69.8 22.8 ...
+##  $ NOx      : num  87.2 75.2 61.4 73.4 24.8 ...
+##  $ OXY      : num  NA 2.11 NA NA NA ...
+##  $ O_3      : num  34.5 42.2 46.3 40.7 66.3 ...
+##  $ PM10     : num  105 100.6 100.1 69.8 75.2 ...
+##  $ PM25     : num  NA NA NA NA NA NA NA NA NA NA ...
+##  $ PXY      : num  NA 1.73 NA NA NA ...
+##  $ SO_2     : num  6.34 8.11 7.85 6.46 8.8 ...
+##  $ TCH      : num  NA 1.24 NA NA NA ...
+##  $ TOL      : num  NA 10.8 NA NA NA ...
+##  $ station  : int  28079001 28079035 28079003 28079004 28079039 28079006 28079007 28079009 28079038 28079011 ...
+##  $ id       : int  NA NA NA NA NA NA NA NA NA NA ...
+##  $ name     : Factor w/ 24 levels &quot;Arturo Soria&quot;,..: NA NA NA NA NA NA NA NA NA NA ...
+##  $ address  : Factor w/ 24 levels &quot; Pza. FernÃ¡ndez Ladreda - Avda. Oporto&quot;,..: NA NA NA NA NA NA NA NA NA NA ...
+##  $ lon      : num  NA NA NA NA NA NA NA NA NA NA ...
+##  $ lat      : num  NA NA NA NA NA NA NA NA NA NA ...
+##  $ elevation: int  NA NA NA NA NA NA NA NA NA NA ...
+##  $ NewDate  : chr  &quot;08/01/2001&quot; &quot;08/01/2001&quot; &quot;08/01/2001&quot; &quot;08/01/2001&quot; ...
+##  $ day      : int  1 1 1 1 1 1 1 1 1 1 ...
+##  $ month    : int  8 8 8 8 8 8 8 8 8 8 ...
+##  $ year     : int  2001 2001 2001 2001 2001 2001 2001 2001 2001 2001 ...
+##  $ hour     : int  1 1 1 1 1 1 1 1 1 1 ...
+##  $ dates    : Date, format: &quot;2001-08-01&quot; &quot;2001-08-01&quot; ...
+</code></pre>
+
+<pre><code class="r">view(MadridSingleFile)
+summary(MadridSingleFile)
+</code></pre>
+
+<pre><code>##               date              BEN                CO         
+##  1/1/2004 0:00  :     28   Min.   : 0.0      Min.   : 0.0     
+##  10/1/2003 0:00 :     28   1st Qu.: 0.2      1st Qu.: 0.3     
+##  10/1/2003 1:00 :     28   Median : 0.6      Median : 0.4     
+##  10/1/2003 10:00:     28   Mean   : 1.3      Mean   : 0.6     
+##  10/1/2003 11:00:     28   3rd Qu.: 1.5      3rd Qu.: 0.6     
+##  (Other)        :3808084   Max.   :66.4      Max.   :18.0     
+##  NA&#39;s           :     24   NA&#39;s   :2766564   NA&#39;s   :1157236  
+##       EBE               MXY               NMHC              CH4         
+##  Min.   :  0.0     Min.   :  0       Min.   :0.0       Min.   :0        
+##  1st Qu.:  0.3     1st Qu.:  1       1st Qu.:0.1       1st Qu.:1        
+##  Median :  0.9     Median :  3       Median :0.2       Median :1        
+##  Mean   :  1.4     Mean   :  5       Mean   :0.2       Mean   :1        
+##  3rd Qu.:  1.6     3rd Qu.:  6       3rd Qu.:0.2       3rd Qu.:1        
+##  Max.   :162.2     Max.   :178       Max.   :9.1       Max.   :4        
+##  NA&#39;s   :2806524   NA&#39;s   :3492833   NA&#39;s   :2722936   NA&#39;s   :3799808  
+##        NO               NO_2             NOx               OXY         
+##  Min.   :   0.0    Min.   :  0.00   Min.   :   0.0    Min.   :  0      
+##  1st Qu.:   2.0    1st Qu.: 24.00   1st Qu.:  40.0    1st Qu.:  1      
+##  Median :   6.0    Median : 44.00   Median :  76.2    Median :  1      
+##  Mean   :  23.4    Mean   : 50.47   Mean   : 109.3    Mean   :  2      
+##  3rd Qu.:  20.0    3rd Qu.: 69.58   3rd Qu.: 139.7    3rd Qu.:  3      
+##  Max.   :1146.0    Max.   :628.60   Max.   :2537.0    Max.   :103      
+##  NA&#39;s   :2275851   NA&#39;s   :21198    NA&#39;s   :1431973   NA&#39;s   :3492553  
+##       O_3              PM10             PM25              PXY         
+##  Min.   :  0.0    Min.   :  0.0    Min.   :-31.0     Min.   :  0      
+##  1st Qu.: 12.7    1st Qu.: 11.5    1st Qu.:  6.4     1st Qu.:  1      
+##  Median : 34.9    Median : 21.5    Median : 11.0     Median :  1      
+##  Mean   : 39.8    Mean   : 28.9    Mean   : 13.7     Mean   :  2      
+##  3rd Qu.: 60.0    3rd Qu.: 37.8    3rd Qu.: 17.7     3rd Qu.:  3      
+##  Max.   :236.0    Max.   :695.0    Max.   :506.9     Max.   :106      
+##  NA&#39;s   :816516   NA&#39;s   :946993   NA&#39;s   :2991824   NA&#39;s   :3492664  
+##       SO_2              TCH               TOL             station        
+##  Min.   :  0.0     Min.   : 0.0      Min.   :  0.0     Min.   :28079001  
+##  1st Qu.:  5.8     1st Qu.: 1.3      1st Qu.:  1.1     1st Qu.:28079014  
+##  Median :  8.1     Median : 1.4      Median :  3.2     Median :28079024  
+##  Mean   : 10.7     Mean   : 1.4      Mean   :  5.9     Mean   :28079029  
+##  3rd Qu.: 12.3     3rd Qu.: 1.5      3rd Qu.:  7.0     3rd Qu.:28079040  
+##  Max.   :199.1     Max.   :10.5      Max.   :242.9     Max.   :28079099  
+##  NA&#39;s   :1032288   NA&#39;s   :2721807   NA&#39;s   :2769319   NA&#39;s   :24        
+##        id                             name        
+##  Min.   :28079004   Arturo Soria        :      1  
+##  1st Qu.:28079022   Avda. RamÃ³n y Cajal:      1  
+##  Median :28079040   Barajas Pueblo      :      1  
+##  Mean   :28079038   Barrio del Pilar    :      1  
+##  3rd Qu.:28079054   Casa de Campo       :      1  
+##  Max.   :28079060   (Other)             :     19  
+##  NA&#39;s   :3808224    NA&#39;s                :3808224  
+##                                          address             lon         
+##   Pza. FernÃ¡ndez Ladreda - Avda. Oporto     :      1   Min.   :-4       
+##  Avd. Betanzos esq. C/  Monforte de Lemos    :      1   1st Qu.:-4       
+##  Avd. Moratalaz  esq. Camino de los Vinateros:      1   Median :-4       
+##  Avda La Gavia / Avda. Las Suertes           :      1   Mean   :-4       
+##  Avda. La Guardia                            :      1   3rd Qu.:-4       
+##  (Other)                                     :     19   Max.   :-4       
+##  NA&#39;s                                        :3808224   NA&#39;s   :3808224  
+##       lat            elevation         NewDate               day       
+##  Min.   :40        Min.   :599       Length:3808248     Min.   : 1.00  
+##  1st Qu.:40        1st Qu.:626       Class :character   1st Qu.: 8.00  
+##  Median :40        Median :661       Mode  :character   Median :16.00  
+##  Mean   :40        Mean   :658                          Mean   :15.72  
+##  3rd Qu.:40        3rd Qu.:687                          3rd Qu.:23.00  
+##  Max.   :41        Max.   :728                          Max.   :31.00  
+##  NA&#39;s   :3808224   NA&#39;s   :3808224                      NA&#39;s   :24     
+##      month             year           hour           dates           
+##  Min.   : 1.000   Min.   :2001   Min.   : 0.00   Min.   :2001-01-01  
+##  1st Qu.: 3.000   1st Qu.:2005   1st Qu.: 5.75   1st Qu.:2005-02-10  
+##  Median : 6.000   Median :2009   Median :11.50   Median :2009-04-11  
+##  Mean   : 6.445   Mean   :2009   Mean   :11.50   Mean   :2009-06-20  
+##  3rd Qu.: 9.000   3rd Qu.:2013   3rd Qu.:17.25   3rd Qu.:2013-10-17  
+##  Max.   :12.000   Max.   :2018   Max.   :23.00   Max.   :2018-05-01  
+##  NA&#39;s   :24       NA&#39;s   :24     NA&#39;s   :24      NA&#39;s   :24
+</code></pre>
+
+<pre><code class="r">#After added the new fields the below commands remove unnecessary columns 20-26, and remove the last 24 rows, the to lines of code does that then we can #validate that by using the view command. 
+
+MadridSingleFile[20:26] &lt;- list(NULL)
+MadridSingleFile  &lt;- slice(MadridSingleFile, 1:(n()-24))
+view(MadridSingleFile)
+</code></pre>
+
+<p>******************************************<strong><em>This is the start of the Exploratory Data Analysis</em></strong>**************************************************</p>
+
+<p>I am pulling out the four most common pollutants that are consider by the government as the most harmful to humans.
+There are two things going on here with the code below.</p>
+
+<ol>
+<li>I am pulling out only the four pollutants that I want to look at </li>
+<li>Showing how often the data is populated. NO_2 Nitrogen dioxide is the most populated.<br></li>
+</ol>
+
+<pre><code class="r">#I am starting to look at the top four pollutants. 
+
+FinalFourPollutants &lt;-MadridSingleFile[,c(&#39;O_3&#39;,&#39;PM10&#39;,&#39;NO_2&#39;,&#39;SO_2&#39;)]
+
+summary(FinalFourPollutants)
+</code></pre>
+
+<pre><code>##       O_3              PM10             NO_2             SO_2        
+##  Min.   :  0.0    Min.   :  0.0    Min.   :  0.00   Min.   :  0.0    
+##  1st Qu.: 12.7    1st Qu.: 11.5    1st Qu.: 24.00   1st Qu.:  5.8    
+##  Median : 34.9    Median : 21.5    Median : 44.00   Median :  8.1    
+##  Mean   : 39.8    Mean   : 28.9    Mean   : 50.47   Mean   : 10.7    
+##  3rd Qu.: 60.0    3rd Qu.: 37.8    3rd Qu.: 69.58   3rd Qu.: 12.3    
+##  Max.   :236.0    Max.   :695.0    Max.   :628.60   Max.   :199.1    
+##  NA&#39;s   :816492   NA&#39;s   :946969   NA&#39;s   :21174    NA&#39;s   :1032264
+</code></pre>
+
+<pre><code class="r">NotNAs&lt;-data.frame(percent=round(colSums(!is.na(FinalFourPollutants))/nrow(FinalFourPollutants)*100))
+NotNAs$poll &lt;- rownames(NotNAs)
+NotNAs$pollutants&lt;-factor(NotNAs$poll, as.character(NotNAs$poll))
+
+ggplot(NotNAs, aes(pollutants, percent,fill=pollutants))+
+geom_bar(stat=&quot;identity&quot;) +scale_fill_manual(values = c(&quot;red&quot;,&quot;green&quot;,&quot;brown&quot;,&quot;blue&quot;))+
+
+geom_text(data=NotNAs, aes(label=paste0(percent,&quot;%&quot;),
+                               y=percent+0.9), size=4, vjust = -.4)+
+ labs(x = &quot;Pollutants&quot;, y = &quot;Percentage&quot;, 
+         title = &quot;Percent of pollutants populated&quot;)
+</code></pre>
+
+<p><img src="figure/unnamed-chunk-5-1.png" alt="plot of chunk unnamed-chunk-5">
+The code below are box plots taht are turned on their sides.  To make this happen, I started with this code </p>
+
+<p>Pollutantnames&lt;-c(&quot;SO_2&quot;, &quot;NO_2&quot;, &quot;PM10&quot;, &quot;O_3&quot;)
+BP &lt;- boxplot(FinalFourPollutants$O_3,FinalFourPollutants$PM10,FinalFourPollutants$NO_2,FinalFourPollutants$SO_2,horizontal=TRUE,las=1, names = Pollutantnames)</p>
+
+<p>Which if run will only produce a black and white plot. It took me awhile to get the items to line up.  </p>
+
+<pre><code class="r">#In order to keep the same order as in the above code I had to reverse the order of the
+#polluntants, since I was flipping the barchart. I also had to make sure the colors were
+#in the correct order too.
+
+boxplot_melt &lt;- melt(MadridSingleFile,id.vars=&#39;station&#39;, measure.vars=c(&quot;SO_2&quot;, &quot;NO_2&quot;, &quot;PM10&quot;, &quot;O_3&quot;))
+createBoxPlot4Pollutants&lt;-ggplot(na.omit(boxplot_melt),aes(x=variable,y=value, color=variable)) +
+      geom_boxplot()+ coord_flip()+
+      scale_colour_manual(values=c(&quot;blue&quot;,&quot;brown&quot;,&quot;green&quot;,&quot;red&quot;))+
+      theme(legend.position=&quot;none&quot;)+
+      labs(title=&quot;Distribution Of The Four Pollutants&quot;)
+plot(createBoxPlot4Pollutants)
+</code></pre>
+
+<p><img src="figure/unnamed-chunk-6-1.png" alt="plot of chunk unnamed-chunk-6">
+Below are the histograms for the four pollutants.  I used sqldf to extract the data.  Once again I used the same colors for the polluntants.  This makes it easier to track of them.  </p>
+
+<pre><code class="r"># The first thing was to extract the data using sqldf
+
+
+histO_3 &lt;-sqldf(&quot;select O_3, count(*)
+               from MadridSingleFile 
+               where O_3 != &#39;NA&#39;
+               group by O_3&quot;)
+
+histPM10 &lt;-sqldf(&quot;select PM10, count(*)
+                from MadridSingleFile 
+                where PM10 !=&#39;NA&#39;
+                group by PM10&quot;)
+
+histNO_2 &lt;-sqldf(&quot;select NO_2, count(*)
+                from MadridSingleFile 
+                where NO_2 !=&#39;NA&#39;
+                group by NO_2&quot;)
+
+histSO_2 &lt;-sqldf(&quot;select SO_2, count(*)
+                from MadridSingleFile 
+                where SO_2 !=&#39;NA&#39;
+                group by SO_2&quot;)
+
+#Step 2 plot the histograms.  
+
+hist(histO_3$O_3, plot=TRUE, col=&quot;red&quot;)
+</code></pre>
+
+<p><img src="figure/unnamed-chunk-7-1.png" alt="plot of chunk unnamed-chunk-7"></p>
+
+<pre><code class="r">hist(histPM10$PM10, plot=TRUE,col=&quot;green&quot;)
+</code></pre>
+
+<p><img src="figure/unnamed-chunk-7-2.png" alt="plot of chunk unnamed-chunk-7"></p>
+
+<pre><code class="r">hist(histNO_2$NO_2, plot=TRUE, col=&quot;brown&quot;)
+</code></pre>
+
+<p><img src="figure/unnamed-chunk-7-3.png" alt="plot of chunk unnamed-chunk-7"></p>
+
+<pre><code class="r">hist(histSO_2$SO_2, plot=TRUE,col=&quot;blue&quot;)
+</code></pre>
+
+<p><img src="figure/unnamed-chunk-7-4.png" alt="plot of chunk unnamed-chunk-7">
+The remaining code is the time series for NO_2. So I using sqldf, I selected years greater than 2016.  So, I will be using 2017-2018 to forecast 60 days out for NO_2 (Nitrogen dioxide).  These same steps could be used for any timeseries, including the other pollutants.   </p>
+
+<pre><code class="r"># Step 1.  Need to get NO_2 into a file called group_ts.  I selected the year &gt; 2016 and where the 
+#NO_2 value was less than 150.  I did this based ont the EDA
+
+group_ts &lt;- sqldf(&quot;select *
+                  from MadridSingleFile
+                  where year &gt; 2016 and (NO_2) &lt; 150
+                  group by day, month, year&quot;)
+
+
+#Step 2.  Plot the graph by month
+
+ggplot(group_ts, aes(dates,NO_2)) + geom_line()+
+  scale_x_date(&#39;month&#39;)
+</code></pre>
+
+<p><img src="figure/unnamed-chunk-8-1.png" alt="plot of chunk unnamed-chunk-8">
+Step 2.  I want to look at the data using the facet_wrap command by month.  This will show us if there are diffent years with data in the same month.<br>
+I did find this an intresting plot.  </p>
+
+<pre><code class="r"># Plotting NO_2 by month.  We can see that we have 2017 and 2018 through the first four months.  This helps to understand what is happening with
+#the data. 
+
+ggplot(group_ts, aes(dates,NO_2)) + geom_point(color = &quot;brown&quot;) +
+  facet_wrap( ~month) + scale_x_date(&#39;month&#39;)
+</code></pre>
+
+<p><img src="figure/unnamed-chunk-9-1.png" alt="plot of chunk unnamed-chunk-9">
+Step 3.  We need to create a times series object.  </p>
+
+<pre><code class="r"># I need to create a time series object. I will be using the group_ts create above for this.  
+
+NO_2.tsobject = ts(group_ts[, c(&quot;NO_2&quot;)])
+
+# Now I will use the tsclean command to clean up the NO_2 data.  
+group_ts$tscleaned = tsclean(NO_2.tsobject)
+
+#Plot the data.  
+ggplot() +
+  geom_line(data = group_ts, aes( x= dates, y= tscleaned))
+</code></pre>
+
+<pre><code>## Don&#39;t know how to automatically pick scale for object of type ts. Defaulting to continuous.
+</code></pre>
+
+<p><img src="figure/unnamed-chunk-10-1.png" alt="plot of chunk unnamed-chunk-10">
+Step 4.  Now I am going to look at the moving average for weekly and the 30.  Plot them with the count to help determine which value will be used.  It&#39;s hard to see, I know, the green (Monthly moving average) doesn&#39;t have a lot of variance. So I decided to us the weekly moving average. There is still quite a bit of variance. Depending on what you&#39;re looking at this can help decided what you want. </p>
+
+<pre><code class="r">#Here is where I get the moving average for weekly and monthly for NO_2 using the ma function
+
+group_ts$NO_2.mavg7 = ma(group_ts$tscleaned,order = 7)
+group_ts$NO_2.mavg30 = ma(group_ts$tscleaned,order = 30)
+
+ggplot() +
+  geom_line(data = group_ts, aes(x = dates, y = tscleaned, colour = &quot;Counts&quot;)) +
+  geom_line(data = group_ts, aes(x = dates, y = NO_2.mavg30, colour = &quot;Monthly Moving Average&quot;)) +
+  geom_line(data = group_ts, aes(x = dates, y = NO_2.mavg7, colour = &quot;weekly Moving Average&quot;))
+</code></pre>
+
+<pre><code>## Don&#39;t know how to automatically pick scale for object of type ts. Defaulting to continuous.
+</code></pre>
+
+<pre><code>## Warning: Removed 2 rows containing missing values (geom_path).
+</code></pre>
+
+<pre><code>## Warning: Removed 1 rows containing missing values (geom_path).
+</code></pre>
+
+<p><img src="figure/unnamed-chunk-11-1.png" alt="plot of chunk unnamed-chunk-11"></p>
+
+<p>Step 5. Now I am going to decompose the data that will be used in the ARIMA forecasting  </p>
+
+<p>There is a lot going on in this next bit of code.  1) Need to remove an na&#39;s from NO_2.  2) Going to remove seasonality.  3) decompose it and then graph it.  </p>
+
+<pre><code class="r">count_ma = ts(na.omit(group_ts$NO_2.mavg7), frequency = 30)
+decomp = stl(count_ma, s.window = &quot;periodic&quot;)
+rmvseasonal.NO_2 &lt;- seasadj(decomp) # decomp will be use later on. 
+
+plot(decomp)
+</code></pre>
+
+<p><img src="figure/unnamed-chunk-12-1.png" alt="plot of chunk unnamed-chunk-12"></p>
+
+<pre><code class="r"># Notice the data is much cleaner than it was before because
+# I&#39;m using a weekly moving average. The plot just shows what the 
+#code is doing
+######## The NO_2 data is NOT stationary.  It&#39;s going up and down
+
+#######################################
+
+#Need to run a Augmented Dickey-Fuller test using the adf function.  
+#whats key here is the lag order, which will be used later on. The
+#other important thing here is the more negative they number the 
+#more accurate the model will be.  In this case it&#39;s -4.861
+#will see if I can improve on that number.  
+
+
+adf.test(count_ma, alternative = &quot;stationary&quot;)
+</code></pre>
+
+<pre><code>## Warning in adf.test(count_ma, alternative = &quot;stationary&quot;): p-value smaller
+## than printed p-value
+</code></pre>
+
+<pre><code>## 
+##  Augmented Dickey-Fuller Test
+## 
+## data:  count_ma
+## Dickey-Fuller = -4.861, Lag order = 7, p-value = 0.01
+## alternative hypothesis: stationary
+</code></pre>
+
+<pre><code class="r"># The functions below check the the correlations between 
+# the series and its lag.  
+Acf(count_ma, main= &quot;&quot;)
+</code></pre>
+
+<p><img src="figure/unnamed-chunk-13-1.png" alt="plot of chunk unnamed-chunk-13"></p>
+
+<pre><code class="r">Pacf(count_ma, main = &quot;&quot;)
+</code></pre>
+
+<p><img src="figure/unnamed-chunk-13-2.png" alt="plot of chunk unnamed-chunk-13"></p>
+
+<pre><code class="r">#Here I&#39;m seeing how close I can get the difference.  Depending on 
+#what you want, you can change the differences, I&#39;v decided to use 1
+
+count_diff = diff(rmvseasonal.NO_2, differences = 1)
+plot(count_diff)
+</code></pre>
+
+<p><img src="figure/unnamed-chunk-14-1.png" alt="plot of chunk unnamed-chunk-14"></p>
+
+<pre><code class="r">adf.test(count_diff, alternative = &quot;stationary&quot;)
+</code></pre>
+
+<pre><code>## Warning in adf.test(count_diff, alternative = &quot;stationary&quot;): p-value
+## smaller than printed p-value
+</code></pre>
+
+<pre><code>## 
+##  Augmented Dickey-Fuller Test
+## 
+## data:  count_diff
+## Dickey-Fuller = -14.374, Lag order = 7, p-value = 0.01
+## alternative hypothesis: stationary
+</code></pre>
+
+<pre><code class="r">Acf(count_diff, main = &quot;ACF Series&quot;)
+</code></pre>
+
+<p><img src="figure/unnamed-chunk-14-2.png" alt="plot of chunk unnamed-chunk-14"></p>
+
+<pre><code class="r">Pacf(count_diff, main = &quot;PACF Series&quot;)
+</code></pre>
+
+<p><img src="figure/unnamed-chunk-14-3.png" alt="plot of chunk unnamed-chunk-14">
+########################  FITTING THE MODEL ####################</p>
+
+<p>Step 1. </p>
+
+<pre><code class="r">#Fitting the ARMIA model
+#Here I&#39;m getting the p,d,q values. By using the auto.arima
+#I want to see what values it brings back for the p,d,q values. 
+
+auto.arima(rmvseasonal.NO_2, seasonal = FALSE)
+</code></pre>
+
+<pre><code>## Series: rmvseasonal.NO_2 
+## ARIMA(2,0,3) with non-zero mean 
+## 
+## Coefficients:
+##          ar1      ar2      ma1     ma2     ma3     mean
+##       1.6770  -0.8209  -0.7891  0.1829  0.3032  48.9180
+## s.e.  0.0484   0.0437   0.0585  0.0528  0.0414   1.2717
+## 
+## sigma^2 estimated as 33.66:  log likelihood=-1523.43
+## AIC=3060.85   AICc=3061.09   BIC=3090.07
+</code></pre>
+
+<pre><code class="r">#It brings back p,d,q values of 2,0,3.  
+</code></pre>
+
+<p>Step 2. fitting the model to see what the default p,d,q values of (1,1,1) and will compare that with the values I chose of (1,1,7) based
+on the previous values from above.</p>
+
+<pre><code class="r">#default values to make see how the model looks
+#The lag.max needs to be enough to see how it looks, get enough data. 
+fit &lt;- auto.arima(rmvseasonal.NO_2, seasonal = FALSE)
+tsdisplay(residuals(fit), lag.max = 40, main = &quot;(1,1,1) Module Res&quot;)
+</code></pre>
+
+<p><img src="figure/unnamed-chunk-16-1.png" alt="plot of chunk unnamed-chunk-16"></p>
+
+<pre><code class="r">#values I choose or 1,1,7.  This is a non auto.arima. 
+#Even though my from the adf, it recommended a lag of 7, I chose 8
+#it was a better fit.  
+fit2 &lt;- arima(rmvseasonal.NO_2, order = c(1,1,7))
+tsdisplay(residuals(fit2), lag.max = 15, main = &quot;(1,1,7 Module Res&quot;)
+</code></pre>
+
+<p><img src="figure/unnamed-chunk-16-2.png" alt="plot of chunk unnamed-chunk-16">
+################ Forecasting ##############</p>
+
+<p>I will be using the fit2 model from above. I decided to use the values
+for d,p, q (1,1,7) as the model showed</p>
+
+<pre><code class="r"># Here I&#39;m usqing the fit2 model, which is a non auto.arima. 
+# becasue I ordered the d,p,q vlaues. 
+# h=30, is 30 days.  
+fcast &lt;- forecast(fit2, h=30)
+plot(fcast)
+</code></pre>
+
+<p><img src="figure/unnamed-chunk-17-1.png" alt="plot of chunk unnamed-chunk-17"></p>
+
+<pre><code class="r">#the plot shows a straight line in the forecast area.  this will be 
+#fixed in the steps below.  
+</code></pre>
+
+<p>Step. 2
+I going to take a subset of the data and compare between the holdout and none hold out values. I will doing 30 days, and this will help me to understand if I need to bring back the seasonality to make the predicition more accurate allong with the forecast.  </p>
+
+<pre><code class="r">#since this is a subset ofd data, it will come from the rmvseasonal values
+#this will be 30 days.  from 450 to 480.  which was created earlier. 
+hold &lt;- window(ts(rmvseasonal.NO_2), start = 450)
+fit_nohold = arima(ts(rmvseasonal.NO_2[-c(450:480)]), order=c(1,1,7))
+fcast_nohold &lt;- forecast(fit_nohold, h = 30)
+plot(fcast_nohold, main= &quot;&quot;)
+lines(ts(rmvseasonal.NO_2))
+</code></pre>
+
+<p><img src="figure/unnamed-chunk-18-1.png" alt="plot of chunk unnamed-chunk-18"></p>
+
+<pre><code class="r">fit_with_seasons = auto.arima(rmvseasonal.NO_2, seasonal = TRUE)
+seasons.forecast &lt;- forecast(fit_with_seasons,h=65)
+plot(seasons.forecast)
+</code></pre>
+
+<p><img src="figure/unnamed-chunk-18-2.png" alt="plot of chunk unnamed-chunk-18"></p>
+
+<pre><code class="r">#Forecasting out 65 days shows there is a high trust in the model
+#the forecast is well with in the 95% which is the darker grey.  
+</code></pre>
+
+</body>
+
+</html>
