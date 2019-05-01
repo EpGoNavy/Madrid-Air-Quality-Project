@@ -32,7 +32,7 @@ graphs I used.
 
 # Analysis
 
-Due to the number of observations I had to limit the size of my observations.  In my analysis, I used only one of the four main pollutants.  I will be using NO_2 for the forecasting
+Due to the number of observations, I had to limit the size of my observations.  In my analysis, I used only one of the four main pollutants.  I will be using NO_2 for the forecasting
 
 Here's the code I used.
 
@@ -40,3 +40,35 @@ group_ts <- sqldf("select *
                   from MadridSingleFile
                   where year > 2016 and (NO_2) < 150
                   group by day, month, year")
+# Fitting the model
+After pulling the data this is what the group_ts looks like. We can see that.  
+
+![cleaned](https://github.com/EpGoNavy/Madrid-Air-Quality-Project/blob/master/graphs/tscleanedchart.PNG)
+
+To ensure I had the right lag, I need to do a Augmented Dickey-Fuller test
+(adf).
+
+![adf](https://github.com/EpGoNavy/Madrid-Air-Quality-Project/blob/master/graphs/adf-second-run.PNG)
+
+To make sure my values were correct, I needed to fit the model to make sure
+the lag of 7 and the difference is correct.  We can see that the model is
+tuned.  
+
+![fit](https://github.com/EpGoNavy/Madrid-Air-Quality-Project/blob/master/graphs/model_using_diff_one_lag7.PNG)
+
+# Forecasting NO_2
+I forecasted out 65 days and we can see the results are within the 95 percentile
+which is the dark grey area.  
+
+![final forecast](https://github.com/EpGoNavy/Madrid-Air-Quality-Project/blob/master/graphs/final_forecast.PNG)
+
+# Conclusions
+From the fitting of the model using (1,1,7) for the d,q,p values produced a
+forecast that I can trust.  I am satisfied with the model and have a high
+trust in the results.  
+
+# References
+[timeseries in R](https://www.statmethods.net/advstats/timeseries.html)
+[timeseries 2](https://datascienceplus.com/time-series-analysis-using-arima-model-in-r/)
+[timeseries 3](https://campus.datacamp.com/courses/forecasting-using-r/exploring-and-visualizing-time-series-in-r?ex=2)
+[timeseries 4](http://r-statistics.co/Time-Series-Analysis-With-R.html)
